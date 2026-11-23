@@ -8,7 +8,19 @@ The pig sits quietly in your menu bar. When a process has used at least 80% of a
 
 Each hog in the menu shows its command, CPU use, how long it's been hot, and its parent processes, with options to quit or force quit it, copy its PID, ignore it until it exits, or always ignore processes with that name.
 
-Settings… in the menu changes how busy a process has to be and for how long, and turns Launch at Login on or off.
+## Settings
+
+Choose Settings… (⌘,) from the menu. Changes apply right away.
+
+| Setting         | Options                          | Default        |
+| --------------- | -------------------------------- | -------------- |
+| Busy at least   | 50%, 80%, 100% or 200% of a core | 80% of a core  |
+| For at least    | 5, 10, 15 or 30 minutes, 1 hour  | 30 minutes     |
+| Launch at Login | on or off                        | off            |
+
+A process that uses several cores can go past 100%. Once a process counts as a hog, it stays one until it drops more than 20 points below the Busy at least setting.
+
+Ignored processes are managed from the menu, under Ignored Processes.
 
 ## Install
 
