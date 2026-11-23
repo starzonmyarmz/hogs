@@ -108,7 +108,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(settingsItem)
         menu.addItem(.separator())
         menu.addItem(disabled("Hogs \(Self.version)"))
-        menu.addItem(NSMenuItem(title: "Quit Hogs", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        let quitItem = NSMenuItem(title: "Quit Hogs", action: #selector(quitHogs), keyEquivalent: "q")
+        quitItem.target = self
+        menu.addItem(quitItem)
     }
 
     private func item(for hog: Hog) -> NSMenuItem {
@@ -168,6 +170,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     // MARK: Actions
+
+    // macOS 26 adds a symbol to items whose action is terminate:, which indents every item in the menu.
+    @objc private func quitHogs() {
+        NSApp.terminate(nil)
+    }
 
     @objc private func quitProcess(_ sender: NSMenuItem) {
         signal(sender, SIGTERM)
