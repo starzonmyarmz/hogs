@@ -8,12 +8,15 @@ cask "hogs" do
   homepage "https://github.com/starzonmyarmz/hogs"
 
   depends_on arch: :arm64
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   app "Hogs.app"
 
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{appdir}/Hogs.app"]
+  postflight_steps do
+    run "/usr/bin/xattr",
+        args:           ["-dr", "com.apple.quarantine", "{{appdir}}/Hogs.app"],
+        writable_paths: ["Hogs.app"],
+        writable_base:  :appdir
   end
 
   uninstall quit: "com.iamdanielmarino.hogs"
