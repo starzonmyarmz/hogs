@@ -1,0 +1,42 @@
+import AppKit
+
+let svgPath = CommandLine.arguments[1]
+let iconset = URL(fileURLWithPath: CommandLine.arguments[2])
+try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
+
+guard let pig = NSImage(contentsOfFile: svgPath) else { fatalError("Can't read \(svgPath)") }
+
+func render(_ pixels: Int) -> Data {
+    let rep = NSBitmapImageRep(
+        bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels, bitsPerSample: 8,
+        samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+        bytesPerRow: 0, bitsPerPixel: 0
+    )!
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    let s = CGFloat(pixels) / 1024
+
+    let tile = NSRect(x: 100 * s, y: 100 * s, width: 824 * s, height: 824 * s)
+    let path = NSBezierPath(roundedRect: tile, xRadius: 185 * s, yRadius: 185 * s)
+    NSGradient(
+        starting: NSColor(srgbRed: 1, green: 0.55, blue: 0.5, alpha: 1),
+        ending: NSColor(srgbRed: 0.9, green: 0.36, blue: 0.33, alpha: 1)
+    )!.draw(in: path, angle: -90)
+
+    let glyph = NSImage(size: pig.size, flipped: false) { rect in
+        pig.draw(in: rect)
+        NSColor.white.set()
+        rect.fill(using: .sourceAtop)
+        return true
+    }
+    let side = 600 * s
+    glyph.draw(in: NSRect(x: (CGFloat(pixels) - side) / 2, y: (CGFloat(pixels) - side) / 2, width: side, height: side))
+
+    NSGraphicsContext.restoreGraphicsState()
+    return rep.representation(using: .png, properties: [:])!
+}
+
+for size in [16, 32, 128, 256, 512] {
+    try render(size).write(to: iconset.appendingPathComponent("icon_\(size)x\(size).png"))
+    try render(size * 2).write(to: iconset.appendingPathComponent("icon_\(size)x\(size)@2x.png"))
+}

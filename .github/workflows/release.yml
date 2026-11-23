@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Test
+        run: swift test
+
+      - name: Next version
+        id: version
+        if: github.event_name != 'pull_request'
+        run: echo "version=$(scripts/next-version.sh)" >> "$GITHUB_OUTPUT"
+
+      - name: Import signing certificate
+        if: steps.version.outputs.version != ''
+        env:
+          SIGNING_CERT_P12: ${{ secrets.SIGNING_CERT_P12 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: |
+          if [ -z "$SIGNING_CERT_P12" ]; then
+            echo "::error::SIGNING_CERT_P12 secret is missing"
+            exit 1
+          fi
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$SIGNING_CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$SIGNING_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          openssl pkcs12 -in "$RUNNER_TEMP/cert.p12" -passin env:SIGNING_CERT_PASSWORD -nokeys -clcerts -legacy -out "$RUNNER_TEMP/cert.pem" \
+            || openssl pkcs12 -in "$RUNNER_TEMP/cert.p12" -passin env:SIGNING_CERT_PASSWORD -nokeys -clcerts -out "$RUNNER_TEMP/cert.pem"
+          sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain "$RUNNER_TEMP/cert.pem"
+          rm "$RUNNER_TEMP/cert.p12"
+          echo "SIGN_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+          echo "SIGN_IDENTITY=$(openssl x509 -in "$RUNNER_TEMP/cert.pem" -noout -fingerprint -sha1 | cut -d= -f2 | tr -d :)" >> "$GITHUB_ENV"
+
+      - name: Build
+        if: steps.version.outputs.version != ''
+        run: scripts/build-app.sh "${{ steps.version.outputs.version }}"
+
+      - name: Create release
+        if: steps.version.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" "dist/Hogs-$VERSION.zip" \
+            --target "$GITHUB_SHA" --title "Hogs $VERSION" --generate-notes
+
+      - name: Update Homebrew cask
+        if: steps.version.outputs.version != ''
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "::warning::TAP_TOKEN secret is missing; skipping the cask update"
+            exit 0
+          fi
+          SHA="$(shasum -a 256 "dist/Hogs-$VERSION.zip" | cut -d' ' -f1)"
+          git clone "https://x-access-token:$TAP_TOKEN@github.com/starzonmyarmz/homebrew-tap.git" "$RUNNER_TEMP/tap"
+          mkdir -p "$RUNNER_TEMP/tap/Casks"
+          sed -e "s/__VERSION__/$VERSION/" -e "s/__SHA256__/$SHA/" packaging/hogs.rb > "$RUNNER_TEMP/tap/Casks/hogs.rb"
+          cd "$RUNNER_TEMP/tap"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/hogs.rb
+          git commit -m "chore(hogs): update to $VERSION"
+          git push
