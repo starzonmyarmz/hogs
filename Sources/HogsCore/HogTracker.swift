@@ -9,12 +9,16 @@ public struct Hog: Equatable, Sendable {
 
 public struct HogTracker: Sendable {
     public struct Thresholds: Sendable {
-        public var hotAt = 0.8
-        public var staysHotAt = 0.6
-        public var hotForSeconds = 30.0 * 60
+        public var hotAt: Double
+        public var staysHotAt: Double
+        public var hotForSeconds: Double
         public var maxSampleGapSeconds = 5.0 * 60
 
-        public init() {}
+        public init(hotAt: Double = 0.8, hotForSeconds: Double = 30 * 60) {
+            self.hotAt = hotAt
+            self.staysHotAt = hotAt - 0.2
+            self.hotForSeconds = hotForSeconds
+        }
     }
 
     struct Tracked: Sendable {
