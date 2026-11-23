@@ -1,3 +1,5 @@
+<img src="packaging/icon.png" width="128" height="128" alt="">
+
 # Hogs
 
 A macOS menu bar app that flags processes that have kept a CPU core busy for a long time.
