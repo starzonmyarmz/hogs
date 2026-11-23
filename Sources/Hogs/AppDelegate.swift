@@ -16,6 +16,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let notificationsAvailable = Bundle.main.bundleIdentifier != nil
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let hotForMinutes = UserDefaults.standard.double(forKey: "hotForMinutes")
+        if hotForMinutes > 0 {
+            tracker.thresholds.hotForSeconds = hotForMinutes * 60
+        }
+
         menu.delegate = self
         menu.autoenablesItems = false
         statusItem.menu = menu

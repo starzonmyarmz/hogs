@@ -6,6 +6,12 @@ The pig sits quietly in your menu bar. When a process has used at least 80% of a
 
 Each hog in the menu shows its command, CPU use, how long it's been hot, and its parent processes, with options to quit or force quit it, copy its PID, ignore it until it exits, or always ignore processes with that name.
 
+To change how long a process has to stay busy before it counts as a hog (30 minutes by default), set `hotForMinutes` and relaunch Hogs:
+
+```sh
+defaults write com.iamdanielmarino.hogs hotForMinutes 10
+```
+
 ## Install
 
 ```sh
