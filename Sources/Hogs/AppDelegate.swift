@@ -1,6 +1,5 @@
 import AppKit
 import HogsCore
-import ServiceManagement
 import UserNotifications
 
 @MainActor
@@ -10,17 +9,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private let ignoreList = IgnoreList()
-    private var tracker = HogTracker()
+    private let preferences = Preferences()
+    private lazy var tracker = HogTracker(thresholds: preferences.thresholds)
+    private lazy var settingsWindow = SettingsWindow(preferences: preferences) { [unowned self] in
+        tracker.thresholds = preferences.thresholds
+        refreshHogs()
+    }
     private var hogs: [Hog] = []
     private var timer: Timer?
     private let notificationsAvailable = Bundle.main.bundleIdentifier != nil
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let hotForMinutes = UserDefaults.standard.double(forKey: "hotForMinutes")
-        if hotForMinutes > 0 {
-            tracker.thresholds.hotForSeconds = hotForMinutes * 60
-        }
-
         menu.delegate = self
         menu.autoenablesItems = false
         statusItem.menu = menu
@@ -104,7 +103,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(ignoredItem())
-        menu.addItem(launchAtLoginItem())
+        let settingsItem = NSMenuItem(title: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        menu.addItem(settingsItem)
         menu.addItem(.separator())
         menu.addItem(disabled("Hogs \(Self.version)"))
         menu.addItem(NSMenuItem(title: "Quit Hogs", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
@@ -150,13 +151,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
         }
         item.submenu = submenu
-        return item
-    }
-
-    private func launchAtLoginItem() -> NSMenuItem {
-        let item = NSMenuItem(title: "Launch at Login", action: #selector(toggleLaunchAtLogin(_:)), keyEquivalent: "")
-        item.target = self
-        item.state = SMAppService.mainApp.status == .enabled ? .on : .off
         return item
     }
 
@@ -220,20 +214,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         refreshHogs()
     }
 
-    @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
-        do {
-            if SMAppService.mainApp.status == .enabled {
-                try SMAppService.mainApp.unregister()
-            } else {
-                try SMAppService.mainApp.register()
-            }
-        } catch {
-            let alert = NSAlert()
-            alert.messageText = "Couldn’t change Launch at Login"
-            alert.informativeText = error.localizedDescription
-            NSApp.activate()
-            alert.runModal()
-        }
+    @objc private func showSettings() {
+        settingsWindow.show()
     }
 
     private static var version: String {

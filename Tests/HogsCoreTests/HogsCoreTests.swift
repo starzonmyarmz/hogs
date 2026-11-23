@@ -101,6 +101,46 @@ import Testing
     }
 }
 
+@Suite struct PreferencesTests {
+    func freshDefaults() -> UserDefaults {
+        UserDefaults(suiteName: "hogs-tests-\(UUID())")!
+    }
+
+    @Test func fallsBackToDefaults() {
+        let thresholds = Preferences(defaults: freshDefaults()).thresholds
+        #expect(thresholds.hotAt == 0.8)
+        #expect(abs(thresholds.staysHotAt - 0.6) < 1e-9)
+        #expect(thresholds.hotForSeconds == 30 * 60)
+    }
+
+    @Test func readsSavedValues() {
+        let defaults = freshDefaults()
+        let preferences = Preferences(defaults: defaults)
+        preferences.hotAtPercent = 200
+        preferences.hotForMinutes = 10
+        let thresholds = Preferences(defaults: defaults).thresholds
+        #expect(thresholds.hotAt == 2)
+        #expect(thresholds.staysHotAt == 1.8)
+        #expect(thresholds.hotForSeconds == 10 * 60)
+    }
+
+    @Test func readsMinutesWrittenAsString() {
+        let defaults = freshDefaults()
+        defaults.set("45", forKey: "hotForMinutes")
+        #expect(Preferences(defaults: defaults).hotForMinutes == 45)
+    }
+
+    @Test func lowerThresholdFlagsSooner() {
+        var tracker = HogTracker(thresholds: .init(hotAt: 0.5, hotForSeconds: 5 * 60))
+        tracker.update([42: ProcessSample(pid: 42, ppid: 1, cpuSeconds: 0, elapsedSeconds: 10, command: "/bin/busy", name: "busy")], now: 0)
+        for minute in 1...5 {
+            let sample = ProcessSample(pid: 42, ppid: 1, cpuSeconds: Double(minute) * 36, elapsedSeconds: 10 + Double(minute) * 60, command: "/bin/busy", name: "busy")
+            tracker.update([42: sample], now: Double(minute) * 60)
+        }
+        #expect(tracker.hogs(ignoring: [], now: 5 * 60).count == 1)
+    }
+}
+
 @Suite struct FormatTests {
     @Test func formatsDurations() {
         #expect(Format.duration(59) == "0m")
