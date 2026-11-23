@@ -19,8 +19,8 @@ func render(_ pixels: Int) -> Data {
     let tile = NSRect(x: 100 * s, y: 100 * s, width: 824 * s, height: 824 * s)
     let path = NSBezierPath(roundedRect: tile, xRadius: 185 * s, yRadius: 185 * s)
     NSGradient(
-        starting: NSColor(srgbRed: 1, green: 0.55, blue: 0.5, alpha: 1),
-        ending: NSColor(srgbRed: 0.9, green: 0.36, blue: 0.33, alpha: 1)
+        starting: NSColor(srgbRed: 0xFF / 255, green: 0x7F / 255, blue: 0xB4 / 255, alpha: 1),
+        ending: NSColor(srgbRed: 0xE3 / 255, green: 0x3D / 255, blue: 0x80 / 255, alpha: 1)
     )!.draw(in: path, angle: -90)
 
     let glyph = NSImage(size: pig.size, flipped: false) { rect in

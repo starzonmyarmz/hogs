@@ -2,7 +2,7 @@
 
 A macOS menu bar app that flags processes that have kept a CPU core busy for a long time.
 
-The pig sits quietly in your menu bar. When a process has used at least 80% of a core for 30 minutes (and hasn't dropped below 60% since), the pig turns coral, shows how many hogs it found, and sends a notification.
+The pig sits quietly in your menu bar. When a process has used at least 80% of a core for 30 minutes (and hasn't dropped below 60% since), the pig turns pink, shows how many hogs it found, and sends a notification.
 
 Each hog in the menu shows its command, CPU use, how long it's been hot, and its parent processes, with options to quit or force quit it, copy its PID, ignore it until it exits, or always ignore processes with that name.
 

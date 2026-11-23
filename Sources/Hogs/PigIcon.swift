@@ -10,13 +10,13 @@ enum PigIcon {
 
     static let alertColor = NSColor(name: "HogsAlert") { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            ? NSColor(srgbRed: 1, green: 0x7A / 255, blue: 0x70 / 255, alpha: 1)
-            : NSColor(srgbRed: 0xF2 / 255, green: 0x66 / 255, blue: 0x5E / 255, alpha: 1)
+            ? NSColor(srgbRed: 0xFF / 255, green: 0x6F / 255, blue: 0xA8 / 255, alpha: 1)
+            : NSColor(srgbRed: 0xEC / 255, green: 0x4C / 255, blue: 0x8A / 255, alpha: 1)
     }
 
     private static let base = NSImage(data: Data(svg.utf8))!
 
-    static func template(size: CGFloat = 18) -> NSImage {
+    static func template(size: CGFloat = 20) -> NSImage {
         let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
             base.draw(in: rect)
             return true
@@ -26,7 +26,7 @@ enum PigIcon {
         return image
     }
 
-    static func tinted(_ color: NSColor, size: CGFloat = 18) -> NSImage {
+    static func tinted(_ color: NSColor, size: CGFloat = 20) -> NSImage {
         let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
             base.draw(in: rect)
             color.set()
