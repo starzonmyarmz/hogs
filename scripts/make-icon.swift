@@ -1,10 +1,13 @@
 import AppKit
 
+let tileTop = NSColor(srgbRed: 0xFF / 255, green: 0x7F / 255, blue: 0xB4 / 255, alpha: 1)
+let tileBottom = NSColor(srgbRed: 0xE3 / 255, green: 0x3D / 255, blue: 0x80 / 255, alpha: 1)
+
 let svgPath = CommandLine.arguments[1]
 let iconset = URL(fileURLWithPath: CommandLine.arguments[2])
 try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
 
-guard let pig = NSImage(contentsOfFile: svgPath) else { fatalError("Can't read \(svgPath)") }
+guard let glyphImage = NSImage(contentsOfFile: svgPath) else { fatalError("Can't read \(svgPath)") }
 
 func render(_ pixels: Int) -> Data {
     let rep = NSBitmapImageRep(
@@ -19,12 +22,12 @@ func render(_ pixels: Int) -> Data {
     let tile = NSRect(x: 100 * s, y: 100 * s, width: 824 * s, height: 824 * s)
     let path = NSBezierPath(roundedRect: tile, xRadius: 185 * s, yRadius: 185 * s)
     NSGradient(
-        starting: NSColor(srgbRed: 0xFF / 255, green: 0x7F / 255, blue: 0xB4 / 255, alpha: 1),
-        ending: NSColor(srgbRed: 0xE3 / 255, green: 0x3D / 255, blue: 0x80 / 255, alpha: 1)
+        starting: tileTop,
+        ending: tileBottom
     )!.draw(in: path, angle: -90)
 
-    let glyph = NSImage(size: pig.size, flipped: false) { rect in
-        pig.draw(in: rect)
+    let glyph = NSImage(size: glyphImage.size, flipped: false) { rect in
+        glyphImage.draw(in: rect)
         NSColor.white.set()
         rect.fill(using: .sourceAtop)
         return true

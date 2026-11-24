@@ -2,41 +2,33 @@ name: Release
 
 on:
   push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
+  group: release-${{ github.ref_name }}
 
 jobs:
   release:
     runs-on: macos-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
 
-      - name: Test
-        run: swift test
+      - name: Version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
 
-      - name: Next version
-        id: version
-        if: github.event_name != 'pull_request'
-        run: echo "version=$(scripts/next-version.sh)" >> "$GITHUB_OUTPUT"
+      - run: swift test
 
       - name: Import signing certificate
-        if: steps.version.outputs.version != ''
         env:
           SIGNING_CERT_P12: ${{ secrets.SIGNING_CERT_P12 }}
           SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
         run: |
           if [ -z "$SIGNING_CERT_P12" ]; then
-            echo "::error::SIGNING_CERT_P12 secret is missing"
-            exit 1
+            echo "::warning::SIGNING_CERT_P12 isn't set, so the app is signed ad hoc and macOS will forget its permissions on every update"
+            exit 0
           fi
           KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
           KEYCHAIN_PASSWORD="$(uuidgen)"
@@ -50,38 +42,39 @@ jobs:
             || openssl pkcs12 -in "$RUNNER_TEMP/cert.p12" -passin env:SIGNING_CERT_PASSWORD -nokeys -clcerts -out "$RUNNER_TEMP/cert.pem"
           security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
           sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain "$RUNNER_TEMP/cert.pem"
-          security find-identity -p codesigning "$KEYCHAIN"
           rm "$RUNNER_TEMP/cert.p12"
           echo "SIGN_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
           echo "SIGN_IDENTITY=$(openssl x509 -in "$RUNNER_TEMP/cert.pem" -noout -fingerprint -sha1 | cut -d= -f2 | tr -d :)" >> "$GITHUB_ENV"
 
       - name: Build
-        if: steps.version.outputs.version != ''
-        run: scripts/build-app.sh "${{ steps.version.outputs.version }}"
+        run: scripts/build-app.sh "$VERSION"
 
-      - name: Create release
-        if: steps.version.outputs.version != ''
+      - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          gh release create "v$VERSION" "dist/Hogs-$VERSION.zip" \
-            --target "$GITHUB_SHA" --title "Hogs $VERSION" --generate-notes
+          scripts/changelog-notes "$VERSION" > dist/notes.md
+          cd dist
+          shasum -a 256 "hogs-$VERSION.zip" > SHA256SUMS
+          prerelease=
+          case "$VERSION" in *-*) prerelease=--prerelease ;; esac
+          gh release create "$GITHUB_REF_NAME" "hogs-$VERSION.zip" SHA256SUMS \
+            --title "Hogs $VERSION" \
+            --notes-file notes.md \
+            --verify-tag $prerelease
 
-      - name: Update Homebrew cask
-        if: steps.version.outputs.version != ''
+      - name: Update the Homebrew cask
         env:
-          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
-          VERSION: ${{ steps.version.outputs.version }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
-          if [ -z "$TAP_TOKEN" ]; then
-            echo "::warning::TAP_TOKEN secret is missing; skipping the cask update"
+          if [ -z "$HOMEBREW_TAP_TOKEN" ]; then
+            echo "::warning::HOMEBREW_TAP_TOKEN isn't set, so the cask wasn't updated"
             exit 0
           fi
-          SHA="$(shasum -a 256 "dist/Hogs-$VERSION.zip" | cut -d' ' -f1)"
-          git clone "https://x-access-token:$TAP_TOKEN@github.com/starzonmyarmz/homebrew-tap.git" "$RUNNER_TEMP/tap"
+          SHA="$(shasum -a 256 "dist/hogs-$VERSION.zip" | cut -d' ' -f1)"
+          git clone "https://x-access-token:$HOMEBREW_TAP_TOKEN@github.com/starzonmyarmz/homebrew-tap.git" "$RUNNER_TEMP/tap"
           mkdir -p "$RUNNER_TEMP/tap/Casks"
-          sed -e "s/__VERSION__/$VERSION/" -e "s/__SHA256__/$SHA/" packaging/hogs.rb > "$RUNNER_TEMP/tap/Casks/hogs.rb"
+          sed -e "s/@VERSION@/$VERSION/" -e "s/@SHA256@/$SHA/" packaging/hogs.rb > "$RUNNER_TEMP/tap/Casks/hogs.rb"
           cd "$RUNNER_TEMP/tap"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

@@ -1,0 +1,18 @@
+_commit: 65cd90a
+_src_path: gh:starzonmyarmz/project-kit
+app_id: com.iamdanielmarino.hogs
+author: Daniel Marino
+description: Menu bar app that flags processes hogging the CPU
+design_doc: true
+display_name: Hogs
+menu_bar: true
+name: hogs
+oss_community: false
+owner: starzonmyarmz
+public: true
+ships:
+- github-release
+- homebrew-cask
+stack: swift-app
+voice_doc: false
+year: 2026

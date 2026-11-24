@@ -1,8 +1,8 @@
 cask "hogs" do
-  version "__VERSION__"
-  sha256 "__SHA256__"
+  version "@VERSION@"
+  sha256 "@SHA256@"
 
-  url "https://github.com/starzonmyarmz/hogs/releases/download/v#{version}/Hogs-#{version}.zip"
+  url "https://github.com/starzonmyarmz/hogs/releases/download/v#{version}/hogs-#{version}.zip"
   name "Hogs"
   desc "Menu bar app that flags processes hogging the CPU"
   homepage "https://github.com/starzonmyarmz/hogs"
