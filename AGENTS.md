@@ -23,7 +23,7 @@ scripts/release --dry-run                   # what the next release would be
 - `Sources/HogsCore/`: all the logic, with no AppKit or SwiftUI, so `swift test` covers it. `ProcessList` samples processes, `HogTracker` decides which are hogs and when to notify, `Preferences` and `IgnoreList` hold the settings, and `Format` the menu's text.
 - `Sources/Hogs/`: the AppKit shell. `main.swift` starts it as an accessory app (no Dock icon), `AppDelegate` runs the menu, sampling and notifications, `SettingsWindow` the Settings window, and `PigIcon` the menu bar pig. Keep it thin: anything worth testing moves into Core.
 - `Tests/HogsCoreTests/`: Swift Testing (`@Suite`, `@Test`, `#expect`).
-- `packaging/`: `Info.plist` (the version is `@VERSION@`, filled in at build time), `icon.svg` (the glyph `scripts/make-icon.swift` draws on the app icon tile), and `hogs.rb`, the cask template the release workflow pushes to the tap.
+- `packaging/`: `Info.plist` (the version is `@VERSION@`, filled in at build time), `icon.svg` (the glyph `scripts/make-icon.swift` draws on the app icon tile), and `hogs.rb`, the cask template `starzonmyarmz/homebrew-tap` renders from each release.
 - `scripts/`: `build-app.sh`, `install.sh`, `make-icon.swift` and release tooling.
 
 ## Invariants and footguns

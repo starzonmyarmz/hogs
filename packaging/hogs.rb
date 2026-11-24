@@ -1,6 +1,6 @@
 cask "hogs" do
   version "@VERSION@"
-  sha256 "@SHA256@"
+  sha256 "@SHA256:hogs-@VERSION@.zip@"
 
   url "https://github.com/starzonmyarmz/hogs/releases/download/v#{version}/hogs-#{version}.zip"
   name "Hogs"

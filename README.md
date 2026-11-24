@@ -55,13 +55,12 @@ Releases happen when asked, not on every push. `scripts/release` picks the next 
 
 Pull requests and pushes to `main` run the tests and `swift format lint`. A `feat`, `fix` or `perf` commit must add a line under `[Unreleased]` in `CHANGELOG.md`, and a pull request fails without one unless it has the `no-changelog` label or the commit says `[skip changelog]`.
 
-The tag runs the release workflow: it builds and signs `Hogs.app`, publishes a GitHub release with `hogs-X.Y.Z.zip`, its `SHA256SUMS` and the changelog section as notes, and updates the cask in [starzonmyarmz/homebrew-tap](https://github.com/starzonmyarmz/homebrew-tap).
+The tag runs the release workflow: it builds and signs `Hogs.app`, publishes a GitHub release with `hogs-X.Y.Z.zip`, its `SHA256SUMS` and the changelog section as notes. [starzonmyarmz/homebrew-tap](https://github.com/starzonmyarmz/homebrew-tap) then renders `packaging/hogs.rb` from the release within the hour, or right away when its Update workflow is run.
 
 It needs these repository secrets:
 
 - `SIGNING_CERT_P12`: the base64-encoded code signing certificate and key
 - `SIGNING_CERT_PASSWORD`: the password for that `.p12`
-- `HOMEBREW_TAP_TOKEN`: a fine-grained token with Contents read and write on `homebrew-tap`
 
 Keep signing with the same certificate: macOS ties Launch at Login and notification permissions to it.
 
