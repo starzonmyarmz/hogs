@@ -1,4 +1,4 @@
-_commit: 1a8afac
+_commit: 45c389a
 _src_path: gh:starzonmyarmz/project-kit
 app_id: com.iamdanielmarino.hogs
 author: Daniel Marino
@@ -17,4 +17,5 @@ sponsors: true
 stack: swift-app
 starter: false
 voice_doc: false
+xcodegen: false
 year: 2026

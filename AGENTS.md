@@ -11,7 +11,7 @@ Read before working:
 swift test                                  # the HogsCore tests
 swift run                                   # run the app without bundling it
 swift format --in-place --recursive Package.swift Sources Tests
-scripts/install.sh                          # build, replace /Applications/Hogs.app as X.Y.Z-dev+<sha>, open it
+scripts/install.sh                          # build, replace /Applications/Hogs.app as X.Y.Z-dev, open it
 scripts/build-app.sh 1.2.3                  # dist/Hogs.app and dist/hogs-1.2.3.zip
 scripts/release --dry-run                   # what the next release would be
 ```
