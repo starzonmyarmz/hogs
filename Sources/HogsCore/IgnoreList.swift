@@ -21,9 +21,10 @@ public final class IgnoreList {
         .appendingPathComponent(".config/cpu-hogs/ignore")
 
     static func parseLegacy(_ text: String) -> Set<String> {
-        Set(text.split(separator: "\n")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty && !$0.hasPrefix("#") })
+        Set(
+            text.split(separator: "\n")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty && !$0.hasPrefix("#") })
     }
 
     public var names: Set<String> {

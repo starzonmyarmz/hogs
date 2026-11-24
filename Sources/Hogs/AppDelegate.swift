@@ -84,7 +84,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard notificationsAvailable else { return }
         let content = UNMutableNotificationContent()
         content.title = "CPU hog"
-        content.body = "\(Format.truncate(hog.process.command, to: 60)) has been busy for \(Format.duration(hog.hotFor))"
+        content.body =
+            "\(Format.truncate(hog.process.command, to: 60)) has been busy for \(Format.duration(hog.hotFor))"
         let request = UNNotificationRequest(identifier: "hog-\(hog.process.pid)", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }
@@ -115,7 +116,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func item(for hog: Hog) -> NSMenuItem {
         let p = hog.process
-        let title = "\(Format.truncate(p.command, to: 50)) — \(Int((hog.rate * 100).rounded()))% for \(Format.duration(hog.hotFor))"
+        let title =
+            "\(Format.truncate(p.command, to: 50)) — \(Int((hog.rate * 100).rounded()))% for \(Format.duration(hog.hotFor))"
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         let submenu = NSMenu()
         submenu.autoenablesItems = false
@@ -124,7 +126,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let line = disabled("↑ \(Format.truncate(ancestor, to: 70))")
             line.attributedTitle = NSAttributedString(
                 string: line.title,
-                attributes: [.font: NSFont.menuFont(ofSize: NSFont.smallSystemFontSize), .foregroundColor: NSColor.secondaryLabelColor]
+                attributes: [
+                    .font: NSFont.menuFont(ofSize: NSFont.smallSystemFontSize),
+                    .foregroundColor: NSColor.secondaryLabelColor,
+                ]
             )
             submenu.addItem(line)
         }
@@ -134,7 +139,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         submenu.addItem(action("Copy PID", #selector(copyPID(_:)), p.pid))
         submenu.addItem(.separator())
         submenu.addItem(action("Ignore Until It Exits", #selector(snooze(_:)), p.pid))
-        submenu.addItem(action("Always Ignore “\(Format.truncate(p.name, to: 40))”", #selector(alwaysIgnore(_:)), p.name))
+        submenu.addItem(
+            action("Always Ignore “\(Format.truncate(p.name, to: 40))”", #selector(alwaysIgnore(_:)), p.name))
         item.submenu = submenu
         return item
     }

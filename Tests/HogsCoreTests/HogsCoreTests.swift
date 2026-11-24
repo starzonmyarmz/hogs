@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import HogsCore
 
 @Suite struct ProcessListTests {
@@ -12,13 +13,13 @@ import Testing
 
     @Test func parsesPsOutput() {
         let details = """
-            1     0   1:00.00 3-00:00:00 /sbin/launchd
-          512     1  45:00.00    01:00:00 /Applications/Some App.app/Contents/MacOS/Some App --flag
-        """
+                1     0   1:00.00 3-00:00:00 /sbin/launchd
+              512     1  45:00.00    01:00:00 /Applications/Some App.app/Contents/MacOS/Some App --flag
+            """
         let names = """
-            1 /sbin/launchd
-          512 /Applications/Some App.app/Contents/MacOS/Some App
-        """
+                1 /sbin/launchd
+              512 /Applications/Some App.app/Contents/MacOS/Some App
+            """
         let procs = ProcessList.parse(details: details, names: names)
         #expect(procs.count == 2)
         #expect(procs[512]?.name == "Some App")
@@ -31,7 +32,10 @@ import Testing
 
 @Suite struct HogTrackerTests {
     func sample(_ pid: Int32 = 42, cpu: Double, elapsed: Double, name: String = "busy") -> [Int32: ProcessSample] {
-        [pid: ProcessSample(pid: pid, ppid: 1, cpuSeconds: cpu, elapsedSeconds: elapsed, command: "/bin/\(name)", name: name)]
+        [
+            pid: ProcessSample(
+                pid: pid, ppid: 1, cpuSeconds: cpu, elapsedSeconds: elapsed, command: "/bin/\(name)", name: name)
+        ]
     }
 
     @Test func flagsProcessThatStaysBusyForThirtyMinutes() {
@@ -97,7 +101,10 @@ import Testing
 
         list.remove("node")
         list.add("ruby")
-        #expect(IgnoreList(defaults: defaults, legacyFile: legacy).names == ["kernel_task", "WindowServer", "Slack", "ruby"])
+        #expect(
+            IgnoreList(defaults: defaults, legacyFile: legacy).names == [
+                "kernel_task", "WindowServer", "Slack", "ruby",
+            ])
     }
 }
 
@@ -132,9 +139,15 @@ import Testing
 
     @Test func lowerThresholdFlagsSooner() {
         var tracker = HogTracker(thresholds: .init(hotAt: 0.5, hotForSeconds: 5 * 60))
-        tracker.update([42: ProcessSample(pid: 42, ppid: 1, cpuSeconds: 0, elapsedSeconds: 10, command: "/bin/busy", name: "busy")], now: 0)
+        tracker.update(
+            [
+                42: ProcessSample(
+                    pid: 42, ppid: 1, cpuSeconds: 0, elapsedSeconds: 10, command: "/bin/busy", name: "busy")
+            ], now: 0)
         for minute in 1...5 {
-            let sample = ProcessSample(pid: 42, ppid: 1, cpuSeconds: Double(minute) * 36, elapsedSeconds: 10 + Double(minute) * 60, command: "/bin/busy", name: "busy")
+            let sample = ProcessSample(
+                pid: 42, ppid: 1, cpuSeconds: Double(minute) * 36, elapsedSeconds: 10 + Double(minute) * 60,
+                command: "/bin/busy", name: "busy")
             tracker.update([42: sample], now: Double(minute) * 60)
         }
         #expect(tracker.hogs(ignoring: [], now: 5 * 60).count == 1)

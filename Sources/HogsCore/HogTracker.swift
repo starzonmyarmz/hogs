@@ -46,7 +46,8 @@ public struct HogTracker: Sendable {
         for (pid, p) in processes {
             guard let prev = tracked[pid], prev.command == p.command, p.cpuSeconds >= prev.cpu else {
                 let lifetimeRate = p.elapsedSeconds > 0 ? p.cpuSeconds / p.elapsedSeconds : 0
-                let hotSince = p.elapsedSeconds >= thresholds.hotForSeconds && lifetimeRate >= thresholds.hotAt
+                let hotSince =
+                    p.elapsedSeconds >= thresholds.hotForSeconds && lifetimeRate >= thresholds.hotAt
                     ? now - p.elapsedSeconds : nil
                 tracked[pid] = Tracked(command: p.command, cpu: p.cpuSeconds, sampledAt: now, hotSince: hotSince)
                 continue
@@ -73,10 +74,11 @@ public struct HogTracker: Sendable {
     public func hogs(ignoring ignored: Set<String>, now: Double) -> [Hog] {
         tracked.compactMap { pid, state -> Hog? in
             guard let p = latest[pid], !state.snoozed, !ignored.contains(p.name),
-                  let hotSince = state.hotSince, now - hotSince >= thresholds.hotForSeconds
+                let hotSince = state.hotSince, now - hotSince >= thresholds.hotForSeconds
             else { return nil }
             let lifetimeRate = p.elapsedSeconds > 0 ? p.cpuSeconds / p.elapsedSeconds : 0
-            return Hog(process: p, rate: state.rate ?? lifetimeRate, hotFor: now - hotSince, ancestors: ancestors(of: p))
+            return Hog(
+                process: p, rate: state.rate ?? lifetimeRate, hotFor: now - hotSince, ancestors: ancestors(of: p))
         }
         .sorted { $0.hotFor > $1.hotFor }
     }
