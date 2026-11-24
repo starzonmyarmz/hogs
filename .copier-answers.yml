@@ -1,4 +1,4 @@
-_commit: 65cd90a
+_commit: 34589fa
 _src_path: gh:starzonmyarmz/project-kit
 app_id: com.iamdanielmarino.hogs
 author: Daniel Marino
@@ -14,5 +14,6 @@ ships:
 - github-release
 - homebrew-cask
 stack: swift-app
+starter: false
 voice_doc: false
 year: 2026
