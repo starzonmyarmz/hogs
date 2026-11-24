@@ -4,6 +4,8 @@ What changed for people using Hogs, newest first. Code-only work stays in the gi
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-23
+
 ### Changed
 - The release download is now named `hogs-X.Y.Z.zip` and comes with a `SHA256SUMS` file.
 
